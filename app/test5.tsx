@@ -1,27 +1,27 @@
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { tasksTest2 } from "./_data/tasksTest2";
+import { tasksTest5 } from "../_data/tasksTest5";
 
-export default function Test2() {
+export default function Test5() {
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
 
-  const q = tasksTest2[index];
+  const q = tasksTest5[index];
 
   function choose(isCorrect: boolean) {
     if (isCorrect) setScore(score + 1);
 
-    if (index + 1 < tasksTest2.length) {
+    if (index + 1 < tasksTest5.length) {
       setIndex(index + 1);
     } else {
-      alert(`Wynik: ${score + (isCorrect ? 1 : 0)} / ${tasksTest2.length}`);
+      alert(`Wynik: ${score + (isCorrect ? 1 : 0)} / ${tasksTest5.length}`);
     }
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        Question {index + 1} of {tasksTest2.length}
+        Question {index + 1} of {tasksTest5.length}
       </Text>
 
       <Text style={styles.question}>{q.question}</Text>

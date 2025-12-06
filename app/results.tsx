@@ -1,44 +1,65 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
-const results = [
-  { nick: 'ala', point: '18/20', type: 'test1', date: '21-11-2018' },
-  { nick: 'kasf', point: '15/20', type: 'test1', date: '18-11-2018' },
-  { nick: 'cwv', point: '11/20', type: 'test1', date: '11-10-2018' },
-  { nick: 'zzc', point: '3/20', type: 'test1', date: '15-04-2018' },
-];
+export default function ResultsScreen() {
+  const [refreshing, setRefreshing] = useState(false);
 
-export default function Results() {
+  const [results, setResults] = useState([
+    { nick: "Marek", score: 18, total: 20, type: "historia", date: "2022-11-22" },
+    { nick: "Anna", score: 15, total: 20, type: "sport", date: "2023-04-10" },
+    { nick: "Kasia", score: 20, total: 20, type: "geografia", date: "2023-06-01" },
+    { nick: "Piotr", score: 10, total: 20, type: "muzyka", date: "2024-02-15" }
+  ]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
+
+  const renderItem = ({ item }: { item: any }) => (
+    <View style={styles.card}>
+      <Text style={styles.nick}>{item.nick}</Text>
+      <Text>Wynik: {item.score}/{item.total}</Text>
+      <Text>Kategoria: {item.type}</Text>
+      <Text>Data: {item.date}</Text>
+    </View>
+  );
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Results</Text>
 
-      <View style={styles.table}>
-        <View style={[styles.row, styles.headerRow]}>
-          <Text style={[styles.cell, styles.headerCell]}>Nick</Text>
-          <Text style={[styles.cell, styles.headerCell]}>Point</Text>
-          <Text style={[styles.cell, styles.headerCell]}>Type</Text>
-          <Text style={[styles.cell, styles.headerCell]}>Date</Text>
-        </View>
-
-        {results.map((r, i) => (
-          <View key={i} style={styles.row}>
-            <Text style={styles.cell}>{r.nick}</Text>
-            <Text style={styles.cell}>{r.point}</Text>
-            <Text style={styles.cell}>{r.type}</Text>
-            <Text style={styles.cell}>{r.date}</Text>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+      <FlatList
+        data={results}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={renderItem}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 12 },
-  table: { borderWidth: 1, borderColor: '#ddd', borderRadius: 6 },
-  row: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#eee' },
-  headerRow: { backgroundColor: '#f7f7f7' },
-  cell: { flex: 1, padding: 10 },
-  headerCell: { fontWeight: '700' },
+  container: { flex: 1, padding: 16 },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  card: {
+    backgroundColor: "#eee",
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 10,
+  },
+  nick: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
+  }
 });

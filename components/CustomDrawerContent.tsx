@@ -2,10 +2,10 @@ import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Link } from 'expo-router';
 import React from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -42,6 +42,14 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
           <Link href="/test3" style={styles.testButton}>
             <Text>Test #3</Text>
           </Link>
+
+          <Link href="/test4" style={styles.testButton}>
+            <Text>Test #4</Text>
+          </Link>
+
+          <Link href="/test5" style={styles.testButton}>
+            <Text>Test #5</Text>
+          </Link>
         </View>
 
         <View style={styles.footer}>
@@ -58,7 +66,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20, 
     backgroundColor: '#f0f0f0', 
     flexGrow: 1,
-    paddingTop: 30,        // <<< ODSTĘP OD GÓRY (możesz zmienić np. na 40–60)
+    paddingTop: 30,
   },
   logoBox: {
     height: 140,
