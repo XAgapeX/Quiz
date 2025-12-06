@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { tasksTest4 } from "./_data/tasksTest4";
+import { tasksTest4 } from "../_data/tasksTest4";
 
 export default function Test4() {
   const [index, setIndex] = useState(0);
