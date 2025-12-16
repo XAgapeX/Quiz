@@ -1,59 +1,73 @@
-import { DrawerContentComponentProps } from '@react-navigation/drawer';
-import { Link } from 'expo-router';
-import React from 'react';
+import { DrawerContentComponentProps } from "@react-navigation/drawer";
+import { Link } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { fetchTests } from "../services/quizService";
 
-export default function CustomDrawerContent(props: DrawerContentComponentProps) {
+type Test = {
+  id: string;
+  name: string;
+};
+
+export default function CustomDrawerContent(
+  props: DrawerContentComponentProps
+) {
+  const [tests, setTests] = useState<Test[]>([]);
+
+  useEffect(() => {
+    fetchTests()
+      .then(setTests)
+      .catch((err) =>
+        console.error("Błąd pobierania testów do Drawera", err)
+      );
+  }, []);
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
-        
+
+
         <View style={styles.logoBox}>
           <Text style={styles.logoText}>Quiz App</Text>
+          <Text style={styles.logoSub}>Wybierz test i graj</Text>
         </View>
 
         <View style={styles.section}>
-          <Link href="/" style={styles.button}>
-            <Text style={styles.buttonText}>Home Page</Text>
+          <Link href="/" style={styles.card}>
+            <Text style={styles.cardTitle}>Home</Text>
           </Link>
 
-          <Link href="/results" style={styles.button}>
-            <Text style={styles.buttonText}>Results</Text>
+          <Link href="/results" style={styles.card}>
+            <Text style={styles.cardTitle}>Results</Text>
           </Link>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tests</Text>
+          <Text style={styles.sectionTitle}>Testy</Text>
 
-          <Link href="/test1" style={styles.testButton}>
-            <Text>Test #1</Text>
-          </Link>
-
-          <Link href="/test2" style={styles.testButton}>
-            <Text>Test #2</Text>
-          </Link>
-
-          <Link href="/test3" style={styles.testButton}>
-            <Text>Test #3</Text>
-          </Link>
-
-          <Link href="/test4" style={styles.testButton}>
-            <Text>Test #4</Text>
-          </Link>
-
-          <Link href="/test5" style={styles.testButton}>
-            <Text>Test #5</Text>
-          </Link>
+          {tests.map((test) => (
+            <Link
+              key={test.id}
+              href={`/test/${test.id}`}
+              style={styles.card}
+            >
+              <Text style={styles.cardTitle}>{test.name}</Text>
+            </Link>
+          ))}
         </View>
 
-        <View style={styles.footer}>
-          <Text style={{ color: '#777' }}>v1.0</Text>
+        <View style={styles.footerBox}>
+          <View style={styles.footerButton}>
+            <Text style={styles.footerText}>
+              Quiz App · v1.0
+            </Text>
+          </View>
         </View>
 
       </ScrollView>
@@ -62,47 +76,81 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    paddingVertical: 20, 
-    backgroundColor: '#f0f0f0', 
-    flexGrow: 1,
-    paddingTop: 30,
+  container: {
+    padding: 16,
+    paddingBottom: 40,
+    backgroundColor: "#f9faf8",
   },
+
   logoBox: {
-    height: 140,
-    marginHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#ddd',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  logoText: { fontSize: 20, fontWeight: '700' },
-  section: { marginHorizontal: 12, marginBottom: 18 },
-  button: {
-    backgroundColor: '#e6e6e6',
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  buttonText: {
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  testButton: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 10,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#adc6a4",
+    marginBottom: 24,
+    alignItems: "center",
   },
-  footer: {
-    marginTop: 20,
-    alignItems: 'center',
+
+  logoText: {
+    fontSize: 22,
+    fontFamily: "Poppins_600SemiBold",
+    color: "#adc6a4",
+    textAlign: "center",
+  },
+
+  logoSub: {
+    marginTop: 4,
+    fontSize: 14,
+    fontFamily: "Nunito_400Regular",
+    color: "#6b8f7b",
+    textAlign: "center",
+  },
+
+  section: {
+    marginBottom: 24,
+  },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "Poppins_600SemiBold",
+    color: "#4a6b57",
+    marginBottom: 12,
+  },
+
+  card: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#adc6a4",
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+
+  cardTitle: {
+    fontSize: 15,
+    fontFamily: "Poppins_600SemiBold",
+    color: "#333",
+    textAlign: "center",
+  },
+
+  footerBox: {
+    marginTop: 10,
+  },
+
+  footerButton: {
+    backgroundColor: "#e6efe3",
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+
+  footerText: {
+    textAlign: "center",
+    fontSize: 13,
+    fontFamily: "Nunito_400Regular",
+    color: "#4a6b57",
   },
 });
+
