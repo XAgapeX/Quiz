@@ -6,6 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CustomDrawerContent from "../components/CustomDrawerContent";
+import { fetchTestsDaily } from "../services/quizService";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -20,6 +21,12 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+  
+  useEffect(() => {
+    fetchTestsDaily().catch((err) =>
+      console.error("Błąd pobierania testów przy starcie", err)
+    );
+  }, []);
 
   if (!fontsLoaded) {
     return null;

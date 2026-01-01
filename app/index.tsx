@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Link } from "expo-router";
-import React, { useEffect, useState } from "react";
+import NetInfo from "@react-native-community/netinfo";
+import { Link, useFocusEffect } from "expo-router";
+import _ from "lodash";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -9,6 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { fetchTestsDaily } from "../services/quizService";
 
 type Test = {
   id: string;
@@ -19,6 +22,17 @@ type Test = {
 export default function Home() {
   const [showWelcome, setShowWelcome] = useState<boolean | null>(null);
   const [tests, setTests] = useState<Test[]>([]);
+  const [isOffline, setIsOffline] = useState(false);
+
+
+  const loadTests = async () => {
+    try {
+      const data = await fetchTestsDaily();
+      setTests(_.shuffle(data));
+    } catch (err) {
+      console.error("Błąd ładowania testów", err);
+    }
+  };
 
   useEffect(() => {
     const checkFirstLaunch = async () => {
@@ -35,13 +49,42 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetch("https://tgryl.pl/quiz/tests")
-      .then((res) => res.json())
-      .then(setTests)
-      .catch((err) =>
-        console.error("Błąd pobierania listy testów", err)
-      );
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOffline(!state.isConnected);
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    let lastUpdate: string | null = null;
+
+    const interval = setInterval(async () => {
+      const updated = await AsyncStorage.getItem("testsUpdated");
+
+      if (updated && updated !== lastUpdate) {
+        lastUpdate = updated;
+
+        try {
+          await loadTests();
+        } catch (err) {
+          console.error("Błąd pobierania listy testów", err);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    loadTests();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTests();
+    }, [])
+  );
 
   const acceptRules = async () => {
     await AsyncStorage.setItem("hasLaunched", "true");
@@ -53,6 +96,23 @@ export default function Home() {
     Alert.alert(
       "Reset",
       "Flaga została usunięta. Zrestartuj aplikację."
+    );
+  };
+
+  const clearTestsCache = async () => {
+    await AsyncStorage.multiRemove([
+      "tests_cache",
+      "tests_last_fetch",
+      "testsUpdated",
+    ]);
+
+    console.log("Cache testów usunięty");
+ 
+    await loadTests();
+
+    Alert.alert(
+      "Cache wyczyszczony",
+      "Testy zostały ponownie pobrane z API."
     );
   };
 
@@ -81,7 +141,15 @@ export default function Home() {
           <Button
             title="Reset First Launch (Test)"
             onPress={resetFirstLaunch}
-            color="red"
+            color="#adc6a4"
+          />
+        </View>
+
+        <View style={{ marginTop: 10 }}>
+          <Button
+            title="Wyczyść cache testów"
+            onPress={clearTestsCache}
+            color="#adc6a4"
           />
         </View>
       </View>
@@ -91,6 +159,14 @@ export default function Home() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Home Page</Text>
+
+      {isOffline && (
+        <View style={styles.offlineBox}>
+          <Text style={styles.offlineText}>
+            Brak internetu – wyświetlane są zapisane testy
+          </Text>
+        </View>
+      )}
 
       {tests.map((test) => (
         <View key={test.id} style={styles.card}>
@@ -117,7 +193,15 @@ export default function Home() {
         <Button
           title="Reset First Launch (Test)"
           onPress={resetFirstLaunch}
-          color="red"
+          color="#adc6a4"
+        />
+      </View>
+
+      <View style={{ marginTop: 10 }}>
+        <Button
+          title="Wyczyść cache testów"
+          onPress={clearTestsCache}
+          color="#adc6a4"
         />
       </View>
     </ScrollView>
@@ -185,5 +269,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "Nunito_400Regular",
     color: "#4a6b57",
+  },
+
+  offlineBox: {
+    backgroundColor: "#fff3cd",
+    borderColor: "#ffeeba",
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  offlineText: {
+    color: "#856404",
+    textAlign: "center",
+    fontFamily: "Nunito_400Regular",
   },
 });

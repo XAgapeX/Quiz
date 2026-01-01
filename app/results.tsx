@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -24,10 +25,15 @@ export default function ResultsScreen() {
       const response = await fetch(
         "https://tgryl.pl/quiz/results?last=20"
       );
+
+      if (!response.ok) {
+        throw new Error("Błąd HTTP");
+      }
+
       const data = await response.json();
       setResults(data);
-    } catch (error) {
-      console.error("Błąd pobierania wyników", error);
+    } catch {
+      Alert.alert("Błąd", "Nie udało się pobrać wyników");
     }
   };
 
@@ -46,11 +52,15 @@ export default function ResultsScreen() {
       <Text style={styles.nick}>{item.nick}</Text>
 
       <Text style={styles.text}>
-        Wynik: <Text style={styles.bold}>{item.score}/{item.total}</Text>
+        Wynik:{" "}
+        <Text style={styles.bold}>
+          {item.score}/{item.total}
+        </Text>
       </Text>
 
       <Text style={styles.text}>
-        Kategoria: <Text style={styles.bold}>{item.type}</Text>
+        Kategoria:{" "}
+        <Text style={styles.bold}>{item.type}</Text>
       </Text>
 
       <Text style={styles.date}>
@@ -68,7 +78,10 @@ export default function ResultsScreen() {
         keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
         }
         contentContainerStyle={{ paddingBottom: 20 }}
       />
@@ -114,7 +127,8 @@ const styles = StyleSheet.create({
   },
 
   bold: {
-    fontFamily: "Nunito_700Bold",
+    fontFamily: "Nunito_400Regular",
+    fontWeight: "700",
     color: "#333",
   },
 

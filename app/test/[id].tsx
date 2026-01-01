@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -8,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { shuffleAnswers } from "../../_data/shuffleAnswers";
 import { fetchTestById } from "../../services/quizService";
 
 type Answer = {
@@ -36,12 +38,24 @@ export default function TestScreen() {
   useEffect(() => {
     if (!id) return;
 
-    fetchTestById(id).then((data) => {
-      setTasks(data.tasks);
-      setTestType(data.name);
-      setIndex(0);
-      setScore(0);
-    });
+    fetchTestById(id)
+      .then((data) => {
+        const shuffledTasks = _.shuffle(
+          data.tasks.map((task: Task) => ({
+            ...task,
+            answers: shuffleAnswers(task.answers),
+          }))
+        );
+
+        setTasks(shuffledTasks);
+        setTestType(data.name);
+        setIndex(0);
+        setScore(0);
+      })
+      .catch(() => {
+        Alert.alert("Błąd", "Nie udało się pobrać testu");
+        router.replace("/");
+      });
   }, [id]);
 
   useEffect(() => {
@@ -66,14 +80,11 @@ export default function TestScreen() {
         if (prev <= 1) {
           clearInterval(timerRef.current!);
 
-          setIndex((currentIndex) => {
-            if (currentIndex + 1 < tasks.length) {
-              return currentIndex + 1;
-            } else {
-              finishQuiz(score);
-              return currentIndex;
-            }
-          });
+          if (index + 1 < tasks.length) {
+            setIndex((prevIndex) => prevIndex + 1);
+          } else {
+            finishQuiz(score);
+          }
 
           return QUESTION_TIME;
         }
@@ -86,17 +97,7 @@ export default function TestScreen() {
         clearInterval(timerRef.current);
       }
     };
-  }, [index, tasks.length]);
-
-  if (tasks.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text>Ładowanie testu...</Text>
-      </View>
-    );
-  }
-
-  const q = tasks[index];
+  }, [index, tasks]);
 
   function finishQuiz(finalScore: number) {
     fetch("https://tgryl.pl/quiz/result", {
@@ -106,7 +107,7 @@ export default function TestScreen() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        nick: "Katarzyna M",
+        nick: "Katarzyna",
         score: finalScore,
         total: tasks.length,
         type: testType || "quiz",
@@ -126,14 +127,24 @@ export default function TestScreen() {
     }
 
     const newScore = score + (isCorrect ? 1 : 0);
+    setScore(newScore);
 
     if (index + 1 < tasks.length) {
-      setScore(newScore);
       setIndex((prev) => prev + 1);
     } else {
       finishQuiz(newScore);
     }
   }
+
+  if (tasks.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Text>Ładowanie testu...</Text>
+      </View>
+    );
+  }
+
+  const q = tasks[index];
 
   return (
     <>
@@ -189,7 +200,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontFamily: "Poppins_600SemiBold",
     color: "#adc6a4",
   },
   timer: {
@@ -211,7 +221,6 @@ const styles = StyleSheet.create({
   },
   question: {
     fontSize: 18,
-    fontFamily: "Nunito_400Regular",
     marginBottom: 20,
     color: "#444",
   },
@@ -224,7 +233,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   answerText: {
-    fontFamily: "Nunito_400Regular",
     color: "#333",
   },
 });
